@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(45deg, #5C94FC, #87CEEB);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #222;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+.sidebar a {
+    color: #FFD700;
+    text-decoration: none;
+    display: block;
+    margin-bottom:40px;
+    font-size: 13px;
+}
+
+.sidebar .back-button {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 55px;
+    display: block;
+    color: #FFD700;
+}
+
+.sidebar a:hover {
+    color: white;
+    transform: scale(1.05);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+
+        .content {
+            margin-left: 270px;
+            padding: 40px;
+            max-width: 800px;
+        }
+
+        h1, h2, h3 {
+            color: #FFD700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #333;
+            font-size: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #FFD700;
+            padding: 8px;
+            text-align: left;
+        }
+
+        img.diagram {
+            max-width: 100%;
+            margin: 20px 0;
+            border: 2px solid #FFD700;
+        }
+
+        pre {
+            background: #111;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 400px;
+            font-size: 10px;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FFD700;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <a href="click.html" class="back-button">← Back</a>
+            <a href="#intro">Introduction</a>
+            <a href="#materials">Materials</a>
+            <a href="#connections">Connections</a>
+            <a href="#diagram">Diagram</a>
+            <a href="#code">Code</a>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 340px; gap: 30px;">
+  <img src="rq.png" alt="RQ Logo" style="width: 120px;">
+  <img src="click.png" alt="Click Logo" style="width: 100px;">
+</div>
+        </div>
+        <div class="content">
+            <h1 id="intro">Pong Game Tutorial</h1>
+            <img src="pong.gif" alt="Pong Game Preview" class="diagram">
+            <p>Build a single-player Pong game using Arduino! Control the paddle with buttons and battle against an AI paddle on a mini OLED screen.</p>
+
+            <h2 id="materials">Materials</h2>
+            <img src="pong-materials.png" alt="Materials Diagram" class="diagram">
+            <ul>
+                <li>Arduino Uno</li>
+                <li>8 wires</li>
+                <li>Breadboard</li>
+                <li>OLED screen</li>
+                <li>2 buttons</li>
+                <li>USB cable + laptop</li>
+                <li>Battery and battery port connector</li>
+            </ul>
+
+            <h2 id="connections">Connections</h2>
+            <table>
+                <tr>
+                    <th>Device</th>
+                    <th>Input Port</th>
+                    <th>Output Port (UNO)</th>
+                </tr>
+                <tr>
+  <td rowspan="4">OLED Screen</td>
+  <td>VCC</td>
+  <td>5V</td>
+</tr>
+<tr>
+  <td>GND</td>
+  <td>GND</td>
+</tr>
+<tr>
+  <td>SDA</td>
+  <td>A4</td>
+</tr>
+<tr>
+  <td>SCL</td>
+  <td>A5</td>
+</tr>
+<tr>
+  <td rowspan="2">Left Button (UP_BUTTON)</td>
+  <td>GND (left)</td>
+  <td>GND</td>
+</tr>
+<tr>
+  <td>right</td>
+  <td>2</td>
+</tr>
+<tr>
+  <td rowspan="2">Right Button (DOWN_BUTTON)</td>
+  <td>GND (left)</td>
+  <td>GND (or from left button)</td>
+</tr>
+<tr>
+  <td>right</td>
+  <td>3</td>
+</tr>
+            </table>
+
+            <h2 id="diagram">Diagram</h2>
+            <img src="pong-diagram.png" alt="Wiring Diagram" class="diagram">
+
+            <h2 id="code">Code</h2>
+            <pre><button class="copy-button" onclick="copyCode()">COPY</button><code id="code-block">#include &lt;SPI.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+#define UP_BUTTON 2
+#define DOWN_BUTTON 3
+
+const unsigned long PADDLE_RATE = 33;
+const unsigned long BALL_RATE = 16;
+const uint8_t PADDLE_HEIGHT = 24;
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+void drawCourt();
+
+uint8_t ball_x = 64, ball_y = 32;
+uint8_t ball_dir_x = 1, ball_dir_y = 1;
+unsigned long ball_update;
+
+unsigned long paddle_update;
+const uint8_t CPU_X = 12;
+uint8_t cpu_y = 16;
+
+const uint8_t PLAYER_X = 115;
+uint8_t player_y = 16;
+
+void setup() {
+    display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+
+    
+    display.display();
+    unsigned long start = millis();
+
+    pinMode(UP_BUTTON, INPUT);
+    pinMode(DOWN_BUTTON, INPUT);
+    digitalWrite(UP_BUTTON,1);
+    digitalWrite(DOWN_BUTTON,1);
+    display.clearDisplay();
+    drawCourt();
+
+    while(millis() - start < 2000);
+
+    display.display();
+
+    ball_update = millis();
+    paddle_update = ball_update;
+}
+
+void loop() {
+    bool update = false;
+    unsigned long time = millis();
+
+    static bool up_state = false;
+    static bool down_state = false;
+    
+    up_state |= (digitalRead(UP_BUTTON) == LOW);
+    down_state |= (digitalRead(DOWN_BUTTON) == LOW);
+
+    if(time > ball_update) {
+        uint8_t new_x = ball_x + ball_dir_x;
+        uint8_t new_y = ball_y + ball_dir_y;
+
+        // Check if we hit the vertical walls
+        if(new_x == 0 || new_x == 127) {
+            ball_dir_x = -ball_dir_x;
+            new_x += ball_dir_x + ball_dir_x;
+        }
+
+        // Check if we hit the horizontal walls.
+        if(new_y == 0 || new_y == 63) {
+            ball_dir_y = -ball_dir_y;
+            new_y += ball_dir_y + ball_dir_y;
+        }
+
+        // Check if we hit the CPU paddle
+        if(new_x == CPU_X && new_y >= cpu_y && new_y <= cpu_y + PADDLE_HEIGHT) {
+            ball_dir_x = -ball_dir_x;
+            new_x += ball_dir_x + ball_dir_x;
+        }
+
+        // Check if we hit the player paddle
+        if(new_x == PLAYER_X
+           && new_y >= player_y
+           && new_y <= player_y + PADDLE_HEIGHT)
+        {
+            ball_dir_x = -ball_dir_x;
+            new_x += ball_dir_x + ball_dir_x;
+        }
+
+        display.drawPixel(ball_x, ball_y, BLACK);
+        display.drawPixel(new_x, new_y, WHITE);
+        ball_x = new_x;
+        ball_y = new_y;
+
+        ball_update += BALL_RATE;
+
+        update = true;
+    }
+
+    if(time > paddle_update) {
+        paddle_update += PADDLE_RATE;
+
+        // CPU paddle
+        display.drawFastVLine(CPU_X, cpu_y, PADDLE_HEIGHT, BLACK);
+        const uint8_t half_paddle = PADDLE_HEIGHT >> 1;
+        if(cpu_y + half_paddle > ball_y) {
+            cpu_y -= 1;
+        }
+        if(cpu_y + half_paddle < ball_y) {
+            cpu_y += 1;
+        }
+        if(cpu_y < 1) cpu_y = 1;
+        if(cpu_y + PADDLE_HEIGHT > 63) cpu_y = 63 - PADDLE_HEIGHT;
+        display.drawFastVLine(CPU_X, cpu_y, PADDLE_HEIGHT, WHITE);
+
+        // Player paddle
+        display.drawFastVLine(PLAYER_X, player_y, PADDLE_HEIGHT, BLACK);
+        if(up_state) {
+            player_y -= 1;
+        }
+        if(down_state) {
+            player_y += 1;
+        }
+        up_state = down_state = false;
+        if(player_y < 1) player_y = 1;
+        if(player_y + PADDLE_HEIGHT > 63) player_y = 63 - PADDLE_HEIGHT;
+        display.drawFastVLine(PLAYER_X, player_y, PADDLE_HEIGHT, WHITE);
+
+        update = true;
+    }
+
+    if(update)
+        display.display();
+}
+
+
+void drawCourt() {
+    display.drawRect(0, 0, 128, 64, WHITE);
+}
+</code></pre>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('code-block').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied!');
+            });
+        }
+    </script>
+</body>
+</html>

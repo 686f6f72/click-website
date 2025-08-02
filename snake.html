@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(45deg, #5C94FC, #87CEEB);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #222;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+.sidebar a {
+    color: #FFD700;
+    text-decoration: none;
+    display: block;
+    margin-bottom:40px;
+    font-size: 13px;
+}
+
+.sidebar .back-button {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 55px;
+    display: block;
+    color: #FFD700;
+}
+
+.sidebar a:hover {
+    color: white;
+    transform: scale(1.05);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+
+        .content {
+            margin-left: 270px;
+            padding: 40px;
+            max-width: 800px;
+        }
+
+        h1, h2, h3 {
+            color: #FFD700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #333;
+            font-size: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #FFD700;
+            padding: 8px;
+            text-align: left;
+        }
+
+        img.diagram {
+            max-width: 100%;
+            margin: 20px 0;
+            border: 2px solid #FFD700;
+        }
+
+        pre {
+            background: #111;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 400px;
+            font-size: 10px;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FFD700;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <a href="click.html" class="back-button">← Back</a>
+            <a href="#intro">Introduction</a>
+            <a href="#materials">Materials</a>
+            <a href="#connections">Connections</a>
+            <a href="#diagram">Diagram</a>
+            <a href="#code">Code</a>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 340px; gap: 30px;">
+  <img src="rq.png" alt="RQ Logo" style="width: 120px;">
+  <img src="click.png" alt="Click Logo" style="width: 100px;">
+</div>
+        </div>
+        <div class="content">
+            <h1 id="intro">Snake Game Tutorial</h1>
+            <img src="snake.gif" alt="Snake Game Preview" class="diagram">
+            <p>Build a classic Snake game using Arduino and a joystick! Guide the snake to eat food, grow longer, and avoid crashing into the walls or itself on a mini OLED screen.</p>
+
+            <h2 id="materials">Materials</h2>
+<ul>
+    <li>Arduino Uno</li>
+    <li>OLED screen</li>
+    <li>Joystick module</li>
+    <li>4 jumper wires with double-sided male pins</li>
+    <li>4 jumper wires with single-sided male pins</li>
+    <li>Breadboard</li>
+    <li>Battery</li>
+    <li>Battery cable</li>
+    <li>USB cable + laptop</li>
+</ul>
+
+            <h2 id="connections">Connections</h2>
+<img src="connections-snake.png" alt="Connections Diagram for Snake Game" class="diagram">
+
+            <h2 id="diagram">Diagram</h2>
+            <img src="snake-diagram.png" alt="Snake Diagram" class="diagram">
+
+            <h2 id="code">Code</h2>
+            <pre><button class="copy-button" onclick="copyCode()">COPY</button><code id="code-block">#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+// OLED config
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+// Joystick pins
+#define VRX_PIN A0
+#define VRY_PIN A1
+#define SW_PIN 7
+// Game settings
+#define SNAKE_SIZE 4
+#define MAX_SNAKE_LENGTH 50
+int snakeX[MAX_SNAKE_LENGTH], snakeY[MAX_SNAKE_LENGTH];
+int snakeLength = 5;
+int dirX = 1, dirY = 0;
+int foodX, foodY;
+int score = 0;
+void setup() {
+Serial.begin(9600);
+// Initialize display
+if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+Serial.println(F("SSD1306 allocation failed"));
+for (;;);
+}
+display.clearDisplay();
+display.display();
+// Joystick as inputs
+pinMode(VRX_PIN, INPUT);
+pinMode(VRY_PIN, INPUT);
+pinMode(SW_PIN, INPUT_PULLUP);
+// Initialize snake position
+for (int i = 0; i < snakeLength; i++) {
+snakeX[i] = SCREEN_WIDTH / 2 - i*SNAKE_SIZE;
+snakeY[i] = SCREEN_HEIGHT / 2;
+}
+placeFood();
+}
+void loop() {
+readJoystick();
+moveSnake();
+if (checkCollision()) {
+gameOver();
+} else {
+checkFood();
+drawGame();
+delay(150);
+}
+}
+void readJoystick() {
+int x = analogRead(VRX_PIN);
+int y = analogRead(VRY_PIN);
+if (x < 400 && dirX != 1) { dirX = -1; dirY = 0; }
+else if (x > 600 && dirX != -1) { dirX = 1; dirY = 0; }
+else if (y < 400 && dirY != 1) { dirX = 0; dirY = -1; }
+else if (y > 600 && dirY != -1) { dirX = 0; dirY = 1; }
+}
+void moveSnake() {
+for (int i = snakeLength - 1; i > 0; i--) {
+snakeX[i] = snakeX[i - 1];
+snakeY[i] = snakeY[i - 1];
+}
+snakeX[0] += dirX * SNAKE_SIZE;
+snakeY[0] += dirY * SNAKE_SIZE;
+}
+bool checkCollision() {
+// Border collision
+if (snakeX[0] < 0 || snakeX[0] >= SCREEN_WIDTH ||
+snakeY[0] < 0 || snakeY[0] >= SCREEN_HEIGHT) return true;
+// Self-collision
+for (int i = 1; i < snakeLength; i++) {
+if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) return true;
+}
+return false;
+}
+void placeFood() {
+foodX = random(0, SCREEN_WIDTH / SNAKE_SIZE) * SNAKE_SIZE;
+foodY = random(0, SCREEN_HEIGHT / SNAKE_SIZE) * SNAKE_SIZE;
+}
+void checkFood() {
+if (snakeX[0] == foodX && snakeY[0] == foodY) {
+if (snakeLength < MAX_SNAKE_LENGTH) snakeLength++;
+score++;
+placeFood();
+}
+}
+void drawGame() {
+display.clearDisplay();
+// Draw food
+display.fillRect(foodX, foodY, SNAKE_SIZE, SNAKE_SIZE, SSD1306_WHITE);
+// Draw snake
+for (int i = 0; i < snakeLength; i++) {
+display.fillRect(snakeX[i], snakeY[i], SNAKE_SIZE, SNAKE_SIZE, SSD1306_WHITE);
+}
+// Display score
+display.setTextSize(1);
+display.setTextColor(SSD1306_WHITE);
+display.setCursor(0,0);
+display.print(F("Score: "));
+display.print(score);
+display.display();
+}
+void gameOver() {
+display.clearDisplay();
+display.setTextSize(2);
+display.setTextColor(SSD1306_WHITE);
+display.setCursor(20, SCREEN_HEIGHT / 2 - 10);
+display.println(F("Game Over"));
+display.display();
+delay(2000);
+// Reset
+snakeLength = 5;
+dirX = 1; dirY = 0;
+score = 0;
+for (int i = 0; i < snakeLength; i++) {
+snakeX[i] = SCREEN_WIDTH / 2 - i*SNAKE_SIZE;
+snakeY[i] = SCREEN_HEIGHT / 2;
+}
+placeFood();
+}
+
+
+</code></pre>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('code-block').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied!');
+            });
+        }
+    </script>
+</body>
+</html>
