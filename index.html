@@ -368,12 +368,12 @@
         <div class="container">
             <h2>FEATURED GAMES</h2>
             <div class="games-grid">
-                <div class="game-card" onclick="playGame('jumpman')">
+                <div class="game-card" onclick="playGame('flappy')">
                     <div class="game-preview">
-                    <img src="jump.gif" alt="Jumpman" class="game-icon">
+                    <img src="flappy.gif" alt="flappy" class="game-icon">
                 </div>
-                    <h3>JUMPMAN</h3>
-                    <p>Jump over obstacles and collect coins in this classic platformer adventure.</p>
+                    <h3>FLAPPY BIRD</h3>
+                    <p>Fly through gaps and collect points in this classic side-scrolling adventure.</p>
                 </div>
                 <div class="game-card" onclick="playGame('snake')">
                     <div class="game-preview">
@@ -420,7 +420,7 @@ function playGame(gameType) {
     // Redirect based on game type
     const pageMap = {
         'pong': 'pong.html',
-        'jumpman': 'jumpman.html',
+        'flappy': 'flappy.html',
         'snake': 'snake.html',
         'simon': 'simon.html'
     };

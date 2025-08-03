@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Game Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(45deg, #5C94FC, #87CEEB);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #222;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+.sidebar a {
+    color: #FFD700;
+    text-decoration: none;
+    display: block;
+    margin-bottom:40px;
+    font-size: 13px;
+}
+
+.sidebar .back-button {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 55px;
+    display: block;
+    color: #FFD700;
+}
+
+.sidebar a:hover {
+    color: white;
+    transform: scale(1.05);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+
+        .content {
+            margin-left: 270px;
+            padding: 40px;
+            max-width: 800px;
+        }
+
+        h1, h2, h3 {
+            color: #FFD700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #333;
+            font-size: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #FFD700;
+            padding: 8px;
+            text-align: left;
+        }
+
+        img.diagram {
+            max-width: 100%;
+            margin: 20px 0;
+            border: 2px solid #FFD700;
+        }
+
+        pre {
+            background: #111;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 400px;
+            font-size: 10px;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FFD700;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <a href="index.html" class="back-button">← Back</a>
+            <a href="#intro">Introduction</a>
+            <a href="#materials">Materials</a>
+            <a href="#connections">Connections</a>
+            <a href="#diagram">Diagram</a>
+            <a href="#code">Code</a>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 340px; gap: 30px;">
+  <img src="rq.png" alt="RQ Logo" style="width: 120px;">
+  <img src="click.png" alt="Click Logo" style="width: 100px;">
+</div>
+        </div>
+        <div class="content">
+            <h1 id="intro">Flappy Bird Game Tutorial</h1>
+            <img src="flappy.gif" alt="Flappy Game Preview" class="diagram">
+            <p>Build a single-player Flappy Bird game using Arduino! Tap a button to flap and guide the bird through obstacles on a mini OLED screen.</p>
+
+            <h2 id="materials">Materials</h2>
+            <ul>
+                <li>Arduino Uno</li>
+                <li>Wires</li>
+                <li>Breadboard</li>
+                <li>OLED screen</li>
+                <li>1 button</li>
+                <li>1 buzzer</li>
+                <li>USB cable + laptop</li>
+                <li>Battery and battery port connector</li>
+            </ul>
+
+            <h2 id="connections">Connections</h2>
+<table border="1">
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Pin on Component</th>
+      <th>Connects To (Arduino Uno)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="4">SSD1306 OLED</td>
+      <td>VCC</td>
+      <td>5V</td>
+    </tr>
+    <tr>
+      <td>GND</td>
+      <td>GND</td>
+    </tr>
+    <tr>
+      <td>SDA</td>
+      <td>A4</td>
+    </tr>
+    <tr>
+      <td>SCL</td>
+      <td>A5</td>
+    </tr>
+    <tr>
+      <td rowspan="2">Push Button</td>
+      <td>One side</td>
+      <td>D7</td>
+    </tr>
+    <tr>
+      <td>Other side</td>
+      <td>GND</td>
+    </tr>
+    <tr>
+      <td rowspan="2">Buzzer (Passive)</td>
+      <td>+</td>
+      <td>D4</td>
+    </tr>
+    <tr>
+      <td>-</td>
+      <td>GND</td>
+    </tr>
+    <tr>
+      <td rowspan="2">Arduino Uno</td>
+      <td>USB Port</td>
+      <td>Computer or power bank</td>
+    </tr>
+    <tr>
+      <td>Barrel Jack (optional)</td>
+      <td>9V Battery</td>
+    </tr>
+  </tbody>
+</table>
+
+            <h2 id="diagram">Diagram</h2>
+            <img src="flappy-connections.png" alt="Wiring Diagram" class="diagram">
+
+            <h2 id="code">Code</h2>
+            <pre><button class="copy-button" onclick="copyCode()">COPY</button><code id="code-block">
+
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Pin setup
+const int buttonPin = 7;   // Flap + Restart
+const int buzzer = 4;
+
+// Bird
+int birdX = 20;
+int birdY = 32;
+int velocity = 0;
+const int gravity = 1;
+const int flapStrength = -5;
+
+// Pipes
+int pipeX = SCREEN_WIDTH;
+int pipeGapY = 20;
+const int pipeWidth = 15;
+const int pipeGapHeight = 30;
+
+// Game state
+int score = 0;
+bool passedPipe = false;
+bool gameOver = false;
+bool previousButtonState = HIGH;
+
+unsigned long lastFlapTime = 0;
+bool simulateFlapMode = true;
+
+void resetGame() {
+  birdY = 32;
+  velocity = 0;
+  pipeX = SCREEN_WIDTH;
+  pipeGapY = random(10, SCREEN_HEIGHT - pipeGapHeight - 10);
+  score = 0;
+  passedPipe = false;
+  gameOver = false;
+  display.clearDisplay();
+  display.display();
+}
+
+void setup() {
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(buzzer, OUTPUT);
+
+  Serial.begin(9600);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED init failed");
+    while (true);
+  }
+
+  resetGame();
+}
+
+void drawBird() {
+  display.fillRect(birdX, birdY, 5, 5, SSD1306_WHITE);
+}
+
+void drawPipes() {
+  display.fillRect(pipeX, 0, pipeWidth, pipeGapY, SSD1306_WHITE);
+  display.fillRect(pipeX, pipeGapY + pipeGapHeight, pipeWidth, SCREEN_HEIGHT - (pipeGapY + pipeGapHeight), SSD1306_WHITE);
+}
+
+void drawScore() {
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("Score: ");
+  display.print(score);
+}
+
+bool detectCollision() {
+  if (birdY < 0 || birdY > SCREEN_HEIGHT - 5) return true;
+  if (birdX + 5 >= pipeX && birdX <= pipeX + pipeWidth) {
+    if (birdY < pipeGapY || birdY + 5 > pipeGapY + pipeGapHeight) return true;
+  }
+  return false;
+}
+
+bool simulateFlap() {
+  if (millis() - lastFlapTime >= 2000) {
+    lastFlapTime = millis();
+    return true;
+  }
+  return false;
+}
+
+void loop() {
+  bool currentButtonState = digitalRead(buttonPin);
+
+  if (!gameOver) {
+    // Flap: either by button or simulation
+    bool flapTriggered = (previousButtonState == HIGH && currentButtonState == LOW);
+    if (flapTriggered || (simulateFlapMode && simulateFlap())) {
+      velocity = flapStrength;
+      tone(buzzer, 1000, 50);
+    }
+
+    velocity += gravity;
+    birdY += velocity;
+
+    pipeX -= 2;
+    if (pipeX + pipeWidth < 0) {
+      pipeX = SCREEN_WIDTH - 30; // << Pipes appear closer
+      pipeGapY = random(10, SCREEN_HEIGHT - pipeGapHeight - 10);
+      passedPipe = false;
+    }
+
+    if (!passedPipe && pipeX + pipeWidth < birdX) {
+      score++;
+      passedPipe = true;
+    }
+
+    if (detectCollision()) {
+      gameOver = true;
+    }
+
+    display.clearDisplay();
+    drawBird();
+    drawPipes();
+    drawScore();
+    display.display();
+    delay(40);
+  } else {
+    // Game Over Screen
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setCursor(15, 20);
+    display.println("Game Over");
+
+    display.setTextSize(1);
+    display.setCursor(25, 45);
+    display.println("Press Button to Restart");
+    display.display();
+
+    if (previousButtonState == HIGH && currentButtonState == LOW) {
+      delay(300);
+      resetGame();
+    }
+  }
+
+  previousButtonState = currentButtonState;
+}
+</code></pre>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('code-block').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied!');
+            });
+        }
+    </script>
+</body>
+</html>
